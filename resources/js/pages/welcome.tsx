@@ -92,7 +92,7 @@ export default function Welcome({ dataPeta, providers, kekuatanSinyals, filters:
                         <nav>
                             <Button asChild variant="outline">
                                 <Link href={auth.user ? route('dashboard') : route('login')}>
-                                    {auth.user ? 'Dashboard' : 'Admin Login'}
+                                    {auth.user ? 'Dashboard' : 'Login'}
                                 </Link>
                             </Button>
                         </nav>
