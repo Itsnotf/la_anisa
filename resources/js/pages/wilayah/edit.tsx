@@ -18,8 +18,12 @@ const formSchema = z.object({
     desa: z.string().min(1, 'Desa is required'),
     kecamatan: z.string().min(1, 'Kecamatan is required'),
     kabupaten: z.string().min(1, 'Kabupaten is required'),
-    latitude: z.number().min(1, 'Latitude is required'),
-    longitude: z.number().min(1, 'Longitude is required'),
+   latitude: z.coerce.number({ invalid_type_error: 'Latitude harus berupa angka' })
+           .min(-90, 'Latitude minimal -90')
+           .max(90, 'Latitude maksimal 90'),
+       longitude: z.coerce.number({ invalid_type_error: 'Longitude harus berupa angka' })
+           .min(-180, 'Longitude minimal -180')
+           .max(180, 'Longitude maksimal 180'),
 });
 
 export default function EditWilayah({ wilayah }: Props) {
