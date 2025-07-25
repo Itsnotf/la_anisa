@@ -15,6 +15,7 @@ use Inertia\Inertia;
 
 Route::get('/', [WelcomeController::class, 'index'])->name('home');
 Route::post('/laporanMasyarakat/create', [WelcomeController::class, 'storeReport'])->name('laporan.store');
+Route::get('pengukuranSinyal/download-pdf', [PengukuranSinyalController::class, 'downloadPdf'])->name('pengukuranSinyal.downloadPdf');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

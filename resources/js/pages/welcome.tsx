@@ -4,7 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { KekuatanSinyal, PengukuranSinyal, Provider, SharedData } from '@/types';
+import { KekuatanSinyal, PengukuranSinyal, Provider, SharedData, Wilayah } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { lazy, Suspense, useEffect } from 'react';
@@ -21,9 +21,11 @@ interface Props {
     dataPeta: PengukuranSinyal[];
     providers: Provider[];
     kekuatanSinyals: KekuatanSinyal[];
+    wilayahs: Wilayah[];
     filters: {
         provider_id?: string;
         kekuatan_id?: string;
+        wilayah_id?: string;
     };
     flash: {
         success?: string;
@@ -37,7 +39,7 @@ const pickBy = (obj: object) =>
         .filter(([, value]) => value)
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
-export default function Welcome({ dataPeta, providers, kekuatanSinyals, filters: initialFilters, flash }: Props) {
+export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals, filters: initialFilters, flash }: Props) {
     const { auth } = usePage<SharedData>().props;
 
     const form = useReactHookForm<z.infer<typeof LaporanSchema>>({
@@ -48,6 +50,7 @@ export default function Welcome({ dataPeta, providers, kekuatanSinyals, filters:
     const { data: filters, setData } = useForm({
         provider_id: initialFilters.provider_id || '',
         kekuatan_id: initialFilters.kekuatan_id || '',
+        wilayah_id: initialFilters.wilayah_id || ''
     });
 
     useEffect(() => {
@@ -56,7 +59,7 @@ export default function Welcome({ dataPeta, providers, kekuatanSinyals, filters:
         }
     }, [flash]);
 
-    function handleFilterChange(key: 'provider_id' | 'kekuatan_id', value: string) {
+    function handleFilterChange(key: 'provider_id' | 'kekuatan_id' | 'wilayah_id', value: string) {
         setData(key, value);
     }
 
@@ -122,6 +125,15 @@ export default function Welcome({ dataPeta, providers, kekuatanSinyals, filters:
                                         <SelectTrigger><SelectValue placeholder="Semua Sinyal" /></SelectTrigger>
                                         <SelectContent>
                                             {kekuatanSinyals.map(k => <SelectItem key={k.id} value={k.id.toString()}>{k.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Kabupaten/Kota</Label>
+                                    <Select value={filters.wilayah_id} onValueChange={(v) => handleFilterChange('wilayah_id', v)}>
+                                        <SelectTrigger><SelectValue placeholder="Semua Wilayah" /></SelectTrigger>
+                                        <SelectContent>
+                                            {wilayahs.map(w => <SelectItem key={w.id} value={w.id.toString()}>{w.kabupaten}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>

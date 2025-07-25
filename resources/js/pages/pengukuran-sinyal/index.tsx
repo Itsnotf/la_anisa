@@ -4,15 +4,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import AppLayout from '@/layouts/app-layout';
-import { KekuatanSinyal, PengukuranSinyal, Provider, Wilayah, type BreadcrumbItem } from '@/types';
+import { cn } from '@/lib/utils';
+import { KekuatanSinyal, PengukuranSinyal, Provider, type BreadcrumbItem } from '@/types';
 import { can } from '@/utils/permission';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id as localeID } from 'date-fns/locale';
 // Impor ikon baru
-import { Calendar as CalendarIcon, ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronDown, ChevronUp, FileDown, SlidersHorizontal, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { PengukuranSinyalColumns } from './columns';
@@ -49,7 +49,6 @@ const pickBy = (obj: object) =>
         .filter(([, value]) => value !== null && value !== undefined && value !== '')
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
-
 export default function PengukuranSinyalIndex({
     pengukuranSinyals,
     providers,
@@ -57,7 +56,7 @@ export default function PengukuranSinyalIndex({
     allKecamatans,
     allKabupatens,
     filters: initialFilters,
-    flash
+    flash,
 }: Props) {
     const [open, setOpen] = useState(false);
     const [pengukuranSinyalToDelete, setPengukuranSinyalToDelete] = useState<number | null>(null);
@@ -103,10 +102,14 @@ export default function PengukuranSinyalIndex({
             tanggal_mulai: undefined,
             tanggal_selesai: undefined,
         });
-        router.get('/pengukuranSinyal', {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            '/pengukuranSinyal',
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     };
 
     const handleDelete = (id: number) => {
@@ -122,6 +125,19 @@ export default function PengukuranSinyalIndex({
         }
     };
 
+    const handleDownloadPdf = () => {
+        const formattedFilters = {
+            ...filters,
+            tanggal_mulai: filters.tanggal_mulai ? format(filters.tanggal_mulai, 'dd/MM/yyyy') : undefined,
+            tanggal_selesai: filters.tanggal_selesai ? format(filters.tanggal_selesai, 'dd/MM/yyyy') : undefined,
+        };
+
+        const queryParams = new URLSearchParams(pickBy(formattedFilters) as any).toString();
+        const url = '/pengukuranSinyal/download-pdf?' + queryParams;
+
+        window.open(url, '_blank');
+    };
+
     useEffect(() => {
         if (flash.success) toast.success(flash.success);
         if (flash.error) toast.error(flash.error);
@@ -131,7 +147,6 @@ export default function PengukuranSinyalIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="PengukuranSinyals" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-
                 <div className="flex justify-end">
                     <Button variant="outline" onClick={() => setIsFilterOpen(!isFilterOpen)}>
                         <SlidersHorizontal className="mr-2 h-4 w-4" />
@@ -141,74 +156,141 @@ export default function PengukuranSinyalIndex({
                 </div>
 
                 {isFilterOpen && (
-                    <div className="rounded-lg border p-4 animate-in fade-in-0 zoom-in-50">
+                    <div className="animate-in fade-in-0 zoom-in-50 rounded-lg border p-4">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            <Select value={filters.kabupaten} onValueChange={(value) => setFilters(prev => ({...prev, kabupaten: value}))}>
-                                <SelectTrigger><SelectValue placeholder="Pilih Kabupaten" /></SelectTrigger>
+                            <Select value={filters.kabupaten} onValueChange={(value) => setFilters((prev) => ({ ...prev, kabupaten: value }))}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Kabupaten" />
+                                </SelectTrigger>
                                 <SelectContent>
-                                    {allKabupatens.map(kab => <SelectItem key={kab} value={kab}>{kab}</SelectItem>)}
+                                    {allKabupatens.map((kab) => (
+                                        <SelectItem key={kab} value={kab}>
+                                            {kab}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
 
-                            <Select value={filters.kecamatan} onValueChange={(value) => setFilters(prev => ({...prev, kecamatan: value}))}>
-                                <SelectTrigger><SelectValue placeholder="Pilih Kecamatan" /></SelectTrigger>
+                            <Select value={filters.kecamatan} onValueChange={(value) => setFilters((prev) => ({ ...prev, kecamatan: value }))}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Kecamatan" />
+                                </SelectTrigger>
                                 <SelectContent>
-                                    {allKecamatans.map(kec => <SelectItem key={kec} value={kec}>{kec}</SelectItem>)}
+                                    {allKecamatans.map((kec) => (
+                                        <SelectItem key={kec} value={kec}>
+                                            {kec}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
 
-                            <Select value={filters.provider_id} onValueChange={(value) => setFilters(prev => ({...prev, provider_id: value}))}>
-                                <SelectTrigger><SelectValue placeholder="Pilih Provider" /></SelectTrigger>
+                            <Select value={filters.provider_id} onValueChange={(value) => setFilters((prev) => ({ ...prev, provider_id: value }))}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Provider" />
+                                </SelectTrigger>
                                 <SelectContent>
-                                    {providers.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
+                                    {providers.map((p) => (
+                                        <SelectItem key={p.id} value={p.id.toString()}>
+                                            {p.name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
 
-                            <Select value={filters.kekuatan_id} onValueChange={(value) => setFilters(prev => ({...prev, kekuatan_id: value}))}>
-                                <SelectTrigger><SelectValue placeholder="Pilih Kekuatan Sinyal" /></SelectTrigger>
+                            <Select value={filters.kekuatan_id} onValueChange={(value) => setFilters((prev) => ({ ...prev, kekuatan_id: value }))}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Kekuatan Sinyal" />
+                                </SelectTrigger>
                                 <SelectContent>
-                                    {kekuatanSinyals.map(k => <SelectItem key={k.id} value={k.id.toString()}>{k.name}</SelectItem>)}
+                                    {kekuatanSinyals.map((k) => (
+                                        <SelectItem key={k.id} value={k.id.toString()}>
+                                            {k.name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
 
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant={'outline'} className={cn('justify-start text-left font-normal', !filters.tanggal_mulai && 'text-muted-foreground')}>
+                                    <Button
+                                        variant={'outline'}
+                                        className={cn('justify-start text-left font-normal', !filters.tanggal_mulai && 'text-muted-foreground')}
+                                    >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {filters.tanggal_mulai ? format(filters.tanggal_mulai, 'PPP', { locale: localeID }) : <span>Tanggal Mulai</span>}
+                                        {filters.tanggal_mulai ? (
+                                            format(filters.tanggal_mulai, 'PPP', { locale: localeID })
+                                        ) : (
+                                            <span>Tanggal Mulai</span>
+                                        )}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filters.tanggal_mulai} onSelect={(date) => setFilters(prev => ({...prev, tanggal_mulai: date}))} /></PopoverContent>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={filters.tanggal_mulai}
+                                        onSelect={(date) => setFilters((prev) => ({ ...prev, tanggal_mulai: date }))}
+                                    />
+                                </PopoverContent>
                             </Popover>
 
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant={'outline'} className={cn('justify-start text-left font-normal', !filters.tanggal_selesai && 'text-muted-foreground')}>
+                                    <Button
+                                        variant={'outline'}
+                                        className={cn('justify-start text-left font-normal', !filters.tanggal_selesai && 'text-muted-foreground')}
+                                    >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {filters.tanggal_selesai ? format(filters.tanggal_selesai, 'PPP', { locale: localeID }) : <span>Tanggal Selesai</span>}
+                                        {filters.tanggal_selesai ? (
+                                            format(filters.tanggal_selesai, 'PPP', { locale: localeID })
+                                        ) : (
+                                            <span>Tanggal Selesai</span>
+                                        )}
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={filters.tanggal_selesai} onSelect={(date) => setFilters(prev => ({...prev, tanggal_selesai: date}))} /></PopoverContent>
+                                <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={filters.tanggal_selesai}
+                                        onSelect={(date) => setFilters((prev) => ({ ...prev, tanggal_selesai: date }))}
+                                    />
+                                </PopoverContent>
                             </Popover>
                         </div>
                         <div className="mt-4 flex justify-end space-x-2">
-                            <Button variant="outline" onClick={resetFilters}><X className="mr-2 h-4 w-4" /> Reset</Button>
+                            <Button variant="secondary" onClick={handleDownloadPdf}>
+                                <FileDown className="mr-2 h-4 w-4" /> Download PDF
+                            </Button>
+                            <Button variant="outline" onClick={resetFilters}>
+                                <X className="mr-2 h-4 w-4" /> Reset
+                            </Button>
                             <Button onClick={applyFilters}>Filter</Button>
                         </div>
                     </div>
                 )}
 
-
-                <DataTable columns={PengukuranSinyalColumns(canEdit, canDelete, handleDelete)} data={pengukuranSinyals} page="pengukuranSinyal" canCreate={canCreate} />
+                <DataTable
+                    columns={PengukuranSinyalColumns(canEdit, canDelete, handleDelete)}
+                    data={pengukuranSinyals}
+                    page="pengukuranSinyal"
+                    canCreate={canCreate}
+                />
 
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger />
                     <DialogContent>
-                        <DialogHeader><h3 className="text-lg font-semibold">Hapus Pengukuran Sinyal</h3></DialogHeader>
-                        <div className="mt-4"><p>Apakah Anda yakin ingin menghapus data ini?</p></div>
+                        <DialogHeader>
+                            <h3 className="text-lg font-semibold">Hapus Pengukuran Sinyal</h3>
+                        </DialogHeader>
+                        <div className="mt-4">
+                            <p>Apakah Anda yakin ingin menghapus data ini?</p>
+                        </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setOpen(false)}>Batal</Button>
-                            <Button variant="destructive" onClick={confirmDelete}>Hapus</Button>
+                            <Button variant="outline" onClick={() => setOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button variant="destructive" onClick={confirmDelete}>
+                                Hapus
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

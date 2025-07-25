@@ -6,8 +6,10 @@ use App\Models\KekuatanSinyal;
 use App\Models\PengukuranSinyal;
 use App\Models\Provider;
 use App\Models\Wilayah;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class PengukuranSinyalController extends Controller
@@ -22,38 +24,12 @@ class PengukuranSinyalController extends Controller
             'kabupaten' => 'nullable|string',
             'provider_id' => 'nullable|integer|exists:providers,id',
             'kekuatan_id' => 'nullable|integer|exists:kekuatan_sinyals,id',
-            'tanggal_mulai' => 'nullable|date_format:d/m/Y',
-            'tanggal_selesai' => 'nullable|date_format:d/m/Y',
+            'tanggal_mulai' => 'nullable',
+            'tanggal_selesai' => 'nullable',
         ]);
 
-        $pengukuranSinyalsQuery = PengukuranSinyal::query()
-            ->with(['wilayah', 'provider', 'kekuatan']);
+        $pengukuranSinyals = $this->buildPengukuranSinyalQuery($request)->get();
 
-        $pengukuranSinyalsQuery
-            ->when($request->input('provider_id'), function ($query, $providerId) {
-                $query->where('provider_id', $providerId);
-            })
-            ->when($request->input('kekuatan_id'), function ($query, $kekuatanId) {
-                $query->where('kekuatan_id', $kekuatanId);
-            })
-            ->when($request->input('kecamatan'), function ($query, $kecamatan) {
-                $query->whereHas('wilayah', function ($q) use ($kecamatan) {
-                    $q->where('kecamatan', $kecamatan);
-                });
-            })
-            ->when($request->input('kabupaten'), function ($query, $kabupaten) {
-                $query->whereHas('wilayah', function ($q) use ($kabupaten) {
-                    $q->where('kabupaten', $kabupaten);
-                });
-            })
-            ->when($request->input('tanggal_mulai'), function ($query, $tanggalMulai) {
-                $query->whereDate('tanggal_pengukuran', '>=', Carbon::createFromFormat('d/m/Y', $tanggalMulai)->format('Y-m-d'));
-            })
-            ->when($request->input('tanggal_selesai'), function ($query, $tanggalSelesai) {
-                $query->whereDate('tanggal_pengukuran', '<=', Carbon::createFromFormat('d/m/Y', $tanggalSelesai)->format('Y-m-d'));
-            });
-
-        $pengukuranSinyals = $pengukuranSinyalsQuery->get();
 
         return Inertia::render('pengukuran-sinyal/index', [
             'pengukuranSinyals' => $pengukuranSinyals,
@@ -67,6 +43,37 @@ class PengukuranSinyalController extends Controller
                 'error' => session('error'),
             ]
         ]);
+    }
+
+    private function buildPengukuranSinyalQuery(Request $request)
+    {
+        $pengukuran = PengukuranSinyal::query()
+            ->with(['wilayah', 'provider', 'kekuatan'])
+            ->when($request->input('provider_id'), function ($query, $providerId) {
+                $query->where('provider_id', $providerId);
+            })
+            ->when($request->input('kekuatan_id'), function ($query, $kekuatanId) {
+                $query->where('kekuatan_id', $kekuatanId);
+            })
+            ->when($request->input('kecamatan'), function ($query, $kecamatan) {
+                $query->whereHas('wilayah', function ($q) use ($kecamatan) {
+                    $q->where('kecamatan', $kecamatan);
+            });
+            })
+            ->when($request->input('kabupaten'), function ($query, $kabupaten) {
+                $query->whereHas('wilayah', function ($q) use ($kabupaten) {
+                    $q->where('kabupaten', $kabupaten);
+                });
+            })
+            ->when($request->input('tanggal_mulai'), function ($query, $tanggalMulai) {
+                $query->whereRaw("STR_TO_DATE(tanggal_pengukuran, '%d/%m/%Y') >= STR_TO_DATE(?, '%d/%m/%Y')", [$tanggalMulai]);
+            })
+            ->when($request->input('tanggal_selesai'), function ($query, $tanggalSelesai) {
+                $query->whereRaw("STR_TO_DATE(tanggal_pengukuran, '%d/%m/%Y') <= STR_TO_DATE(?, '%d/%m/%Y')", [$tanggalSelesai]);
+            });
+
+            // dd($pengukuran->toSql(), $pengukuran->getBindings());
+        return $pengukuran;
     }
 
     /**
@@ -149,5 +156,30 @@ class PengukuranSinyalController extends Controller
         $pengukuranSinyal->delete();
 
         return redirect()->route('pengukuranSinyal.index')->with('success', 'Pengukuran Sinyal deleted successfully.');
+    }
+
+    public function downloadPdf(Request $request)
+    {
+        $request->validate([
+            'kecamatan' => 'nullable|string',
+            'kabupaten' => 'nullable|string',
+            'provider_id' => 'nullable|integer|exists:providers,id',
+            'kekuatan_id' => 'nullable|integer|exists:kekuatan_sinyals,id',
+            'tanggal_mulai' => 'nullable',
+            'tanggal_selesai' => 'nullable',
+        ]);
+
+        $laporanData = $this->buildPengukuranSinyalQuery($request)->get();
+
+        // dd($laporanData->toArray());
+
+        $pdf = Pdf::loadView('reports.pengukuran_sinyal_pdf', [
+            'data' => $laporanData,
+            'filters' => $request->all()
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        $fileName = 'laporan-pengukuran-sinyal-' . date('Y-m-d') . '.pdf';
+        return $pdf->download($fileName);
     }
 }
