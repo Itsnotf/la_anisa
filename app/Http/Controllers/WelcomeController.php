@@ -46,15 +46,17 @@ class WelcomeController extends Controller
             return $item->wilayah && $item->wilayah->latitude && $item->wilayah->longitude;
         })->values();
 
-        $uniqueWilayahs = Wilayah::select('id', 'kabupaten') // <-- DISESUAIKAN
-                                ->groupBy('kabupaten', 'id')      // <-- DISESUAIKAN
-                                ->orderBy('kabupaten', 'asc')     // <-- DISESUAIKAN
-                                ->get();
+        $uniqueKabupatens = Wilayah::select('kabupaten')
+            ->distinct()
+            ->orderBy('kabupaten', 'asc')
+            ->get()
+            ->pluck('kabupaten')
+            ->toArray();
 
         return Inertia::render('welcome', [
             'dataPeta'        => $dataPeta,
             'providers'       => Provider::all(['id', 'name']),
-            'wilayahs'        => $uniqueWilayahs,
+            'wilayahs'        => $uniqueKabupatens,
             'kekuatanSinyals' => KekuatanSinyal::all(['id', 'name']),
             'filters'         => $request->only(['provider_id', 'kekuatan_id', 'wilayah_id']),
             'flash'           => [
