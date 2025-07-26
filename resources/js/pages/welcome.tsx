@@ -50,7 +50,7 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
     const { data: filters, setData } = useForm({
         provider_id: initialFilters.provider_id || '',
         kekuatan_id: initialFilters.kekuatan_id || '',
-        wilayah_id: initialFilters.wilayah_id || ''
+        wilayah_id: initialFilters.wilayah_id || '',
     });
 
     useEffect(() => {
@@ -71,10 +71,14 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
     }
 
     function resetFilters() {
-        router.get(route('home'), {}, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            route('home'),
+            {},
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     }
 
     function onSubmitLaporan(values: z.infer<typeof LaporanSchema>) {
@@ -83,20 +87,22 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
         });
     }
 
+    const uniqueKabupatens = Array.from(
+        new Set(wilayahs.map(w => w.kabupaten))
+    );
+
     return (
         <>
             <Head title="Peta Sebaran Sinyal" />
             <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-                <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur-sm">
+                <header className="bg-background/80 sticky top-0 z-20 border-b backdrop-blur-sm">
                     <div className="container mx-auto flex h-16 items-center justify-between px-4">
                         <Link href={route('home')} className="text-xl font-bold">
                             SignalMap
                         </Link>
                         <nav>
                             <Button asChild variant="outline">
-                                <Link href={auth.user ? route('dashboard') : route('login')}>
-                                    {auth.user ? 'Dashboard' : 'Login'}
-                                </Link>
+                                <Link href={auth.user ? route('dashboard') : route('login')}>{auth.user ? 'Dashboard' : 'Login'}</Link>
                             </Button>
                         </nav>
                     </div>
@@ -113,33 +119,55 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
                                 <div className="space-y-2">
                                     <Label>Provider</Label>
                                     <Select value={filters.provider_id} onValueChange={(v) => handleFilterChange('provider_id', v)}>
-                                        <SelectTrigger><SelectValue placeholder="Semua Provider" /></SelectTrigger>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Semua Provider" />
+                                        </SelectTrigger>
                                         <SelectContent>
-                                            {providers.map(p => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
+                                            {providers.map((p) => (
+                                                <SelectItem key={p.id} value={p.id.toString()}>
+                                                    {p.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Kekuatan Sinyal</Label>
                                     <Select value={filters.kekuatan_id} onValueChange={(v) => handleFilterChange('kekuatan_id', v)}>
-                                        <SelectTrigger><SelectValue placeholder="Semua Sinyal" /></SelectTrigger>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Semua Sinyal" />
+                                        </SelectTrigger>
                                         <SelectContent>
-                                            {kekuatanSinyals.map(k => <SelectItem key={k.id} value={k.id.toString()}>{k.name}</SelectItem>)}
+                                            {kekuatanSinyals.map((k) => (
+                                                <SelectItem key={k.id} value={k.id.toString()}>
+                                                    {k.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Kabupaten/Kota</Label>
                                     <Select value={filters.wilayah_id} onValueChange={(v) => handleFilterChange('wilayah_id', v)}>
-                                        <SelectTrigger><SelectValue placeholder="Semua Wilayah" /></SelectTrigger>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Semua Wilayah" />
+                                        </SelectTrigger>
                                         <SelectContent>
-                                            {wilayahs.map(w => <SelectItem key={w.id} value={w.id.toString()}>{w.kabupaten}</SelectItem>)}
+                                            {uniqueKabupatens.map((kabupaten, idx) => (
+                                                <SelectItem key={kabupaten} value={kabupaten}>
+                                                    {kabupaten}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button onClick={resetFilters} variant="outline" className="w-full">Reset</Button>
-                                    <Button onClick={applyFilters} className="w-full">Terapkan Filter</Button>
+                                    <Button onClick={resetFilters} variant="outline" className="w-full">
+                                        Reset
+                                    </Button>
+                                    <Button onClick={applyFilters} className="w-full">
+                                        Terapkan Filter
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>
@@ -152,20 +180,32 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
                             <CardContent>
                                 <Form {...form}>
                                     <form onSubmit={form.handleSubmit(onSubmitLaporan)} className="space-y-4">
-                                        <FormField control={form.control} name="title" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Judul Laporan</FormLabel>
-                                                <FormControl><Input placeholder="Contoh: Sinyal lemah di area X" {...field} /></FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
-                                        <FormField control={form.control} name="description" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Deskripsi</FormLabel>
-                                                <FormControl><Textarea placeholder="Jelaskan laporan Anda secara detail..." {...field} /></FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )} />
+                                        <FormField
+                                            control={form.control}
+                                            name="title"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Judul Laporan</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Contoh: Sinyal lemah di area X" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="description"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Deskripsi</FormLabel>
+                                                    <FormControl>
+                                                        <Textarea placeholder="Jelaskan laporan Anda secara detail..." {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
                                         <Button type="submit" disabled={form.formState.isSubmitting} className="w-full">
                                             {form.formState.isSubmitting ? 'Mengirim...' : 'Kirim Laporan'}
                                         </Button>
@@ -177,8 +217,8 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
 
                     <section className="lg:col-span-2">
                         <Card className="h-[60vh] lg:h-full">
-                             <Suspense fallback={<div className="flex h-full items-center justify-center">Memuat Peta...</div>}>
-                                <DynamicSignalMap  data={dataPeta} />
+                            <Suspense fallback={<div className="flex h-full items-center justify-center">Memuat Peta...</div>}>
+                                <DynamicSignalMap data={dataPeta} />
                             </Suspense>
                         </Card>
                     </section>
@@ -189,5 +229,5 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-    return <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{children}</label>;
+    return <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{children}</label>;
 }
