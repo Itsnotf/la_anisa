@@ -25,7 +25,7 @@ interface Props {
     filters: {
         provider_id?: string;
         kekuatan_id?: string;
-        wilayah_id?: string;
+        kabupaten?: string;
     };
     flash: {
         success?: string;
@@ -50,7 +50,7 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
     const { data: filters, setData } = useForm({
         provider_id: initialFilters.provider_id || '',
         kekuatan_id: initialFilters.kekuatan_id || '',
-        wilayah_id: initialFilters.wilayah_id || '',
+        kabupaten: initialFilters.kabupaten || '',
     });
 
     useEffect(() => {
@@ -59,7 +59,7 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
         }
     }, [flash]);
 
-    function handleFilterChange(key: 'provider_id' | 'kekuatan_id' | 'wilayah_id', value: string) {
+    function handleFilterChange(key: 'provider_id' | 'kekuatan_id' | 'kabupaten', value: string) {
         setData(key, value);
     }
 
@@ -87,9 +87,7 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
         });
     }
 
-    const uniqueKabupatens = Array.from(
-        new Set(wilayahs.map(w => w.kabupaten))
-    );
+    const uniqueKabupatens = Array.from(new Set(wilayahs.map((w) => w.kabupaten)));
 
     return (
         <>
@@ -148,12 +146,12 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Kabupaten/Kota</Label>
-                                    <Select value={filters.wilayah_id} onValueChange={(v) => handleFilterChange('wilayah_id', v)}>
+                                    <Select value={filters.kabupaten} onValueChange={(v) => handleFilterChange('kabupaten', v)}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Semua Wilayah" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {uniqueKabupatens.map((kabupaten, idx) => (
+                                            {uniqueKabupatens.map((kabupaten) => (
                                                 <SelectItem key={kabupaten} value={kabupaten}>
                                                     {kabupaten}
                                                 </SelectItem>
