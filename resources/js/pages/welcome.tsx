@@ -4,7 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { KekuatanSinyal, PengukuranSinyal, Provider, SharedData, Wilayah } from '@/types';
+import { KekuatanSinyal, PengukuranSinyal, Provider, SharedData } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { lazy, Suspense, useEffect } from 'react';
@@ -21,7 +21,7 @@ interface Props {
     dataPeta: PengukuranSinyal[];
     providers: Provider[];
     kekuatanSinyals: KekuatanSinyal[];
-    wilayahs: Wilayah[];
+    wilayahs: string[];
     filters: {
         provider_id?: string;
         kekuatan_id?: string;
@@ -87,8 +87,7 @@ export default function Welcome({ wilayahs, dataPeta, providers, kekuatanSinyals
         });
     }
 
-    const uniqueKabupatens = Array.from(new Set(wilayahs.map((w) => w.kabupaten)));
-
+    const uniqueKabupatens = wilayahs;
     return (
         <>
             <Head title="Peta Sebaran Sinyal" />
